@@ -1,0 +1,30 @@
+{
+  "name": "XSMB Predictor – Phân tích XSMB",
+  "short_name": "XSMB Predictor",
+  "description": "Phân tích, thống kê và kiểm thử XSMB trên iPhone – hỗ trợ offline.",
+  "id": "./",
+  "start_url": "./?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": [
+    "standalone"
+  ],
+  "background_color": "#020617",
+  "theme_color": "#0f172a",
+  "orientation": "any",
+  "lang": "vi",
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
