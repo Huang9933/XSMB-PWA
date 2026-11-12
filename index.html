@@ -23,9 +23,13 @@
     input, select, textarea { font-size: 16px !important; }
     nav { -webkit-overflow-scrolling: touch; scrollbar-width: none; }
     nav::-webkit-scrollbar { display: none; }
+    @media (max-width: 767px) {
+      nav .tab-btn { white-space: nowrap; flex: 0 0 auto; }
+    }
     .pwa-status {display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:6px 9px;border-radius:999px;border:1px solid #475569;color:#cbd5e1;background:#0f172a;white-space:nowrap;}
     .pwa-dot {display:inline-block;width:7px;height:7px;background:#fbbf24;border-radius:50%;}
     .pwa-dot.ready {background:#34d399;}
+    .sync-btn[disabled] { opacity: .6; cursor: wait; }
     .pwa-data-action {background:#1e293b;color:#e2e8f0;border:1px solid #475569;border-radius:10px;padding:10px 12px;font-weight:600;font-size:13px;}
     .num-ball {
       display: inline-flex;
@@ -62,9 +66,9 @@
           <div class="flex items-center gap-2">
             <h1 class="text-base sm:text-lg font-bold tracking-tight text-white">XSMB Predictor Pro</h1>
             <span class="text-xs px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 font-medium">soketqua.vn</span>
-            <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-medium">v3 • tự dò cầu 2D/3D/4D</span>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-medium">v3.1 • tự tải KQ</span>
           </div>
-          <p class="text-xs text-slate-400">Dự đoán 2 số cuối Giải Đặc Biệt Miền Bắc bằng Tổ hợp Thống kê, Chuỗi Markov & Soi Cầu Ghép Giải</p>
+          <p class="hidden sm:block text-xs text-slate-400">Dự đoán 2 số cuối Giải Đặc Biệt Miền Bắc bằng Tổ hợp Thống kê, Chuỗi Markov & Soi Cầu Ghép Giải</p>
         </div>
       </div>
 
@@ -111,6 +115,8 @@
           <p class="text-xs text-slate-400 font-medium">Kỳ mở thưởng gần nhất</p>
           <p id="latestDateLabel" class="text-sm font-semibold text-slate-200 mt-0.5">Thứ 6, 30/10/2026</p>
           <p class="text-xs text-amber-400 mt-1">Giải Nhất: <span id="latestG1Label" class="font-mono font-bold">87081</span></p>
+          <button id="btnQuickSync" type="button" class="sync-btn mt-2 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-semibold transition">↻ Cập nhật kết quả</button>
+          <p id="latestStaleNote" class="hidden text-[11px] text-amber-300 mt-1"></p>
         </div>
         <div class="text-right">
           <span class="text-xs uppercase tracking-wider text-slate-400 block">Giải ĐB</span>
@@ -203,12 +209,17 @@
               </div>
             </div>
 
-            <div class="pt-2 border-t border-slate-800 flex items-center justify-between">
+            <div class="pt-2 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2">
               <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
                 <input id="chkPenalizeRecent" type="checkbox" checked class="rounded accent-amber-500" />
                 Giảm điểm các số vừa nổ trong 3 kỳ gần nhất
               </label>
-              <span id="windowSizeBadge" class="text-xs font-mono text-slate-400">Biên độ: 30 kỳ</span>
+              <label class="flex items-center gap-1.5 text-xs text-slate-400">Biên độ thống kê
+                <select id="selectPredWindow" title="Số kỳ gần nhất dùng để tính tần suất, Markov và chu kỳ" class="bg-slate-950 border border-slate-700 rounded-lg px-1.5 py-1 text-slate-200">
+                  <option value="30" selected>30 kỳ</option><option value="60">60 kỳ</option><option value="100">100 kỳ</option><option value="200">200 kỳ</option><option value="365">365 kỳ</option><option value="all">Tất cả</option>
+                </select>
+                <span id="windowSizeBadge" class="font-mono">đang dùng 30 kỳ</span>
+              </label>
             </div>
           </div>
 
@@ -716,7 +727,7 @@
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h3 class="text-base font-bold text-white">Bảng Nhiệt Điểm Dự Đoán & Tần Suất 100 Số (00–99)</h3>
-            <p class="text-xs text-slate-400">Màu sắc thể hiện mức độ ưu tiên dự đoán hôm nay; dấu chấm xanh báo hiệu số đã nổ Đề trong 30 kỳ qua</p>
+            <p class="text-xs text-slate-400">Màu sắc thể hiện mức độ ưu tiên dự đoán hôm nay; dấu chấm xanh báo hiệu số đã nổ Đề trong biên độ thống kê đang chọn</p>
           </div>
           <div class="flex items-center gap-3 text-xs">
             <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-amber-500 inline-block"></span> Top 10</span>
@@ -734,11 +745,18 @@
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 class="text-base font-bold text-white">Kiểm Thử Lịch Sử (Walk-Forward Backtesting)</h2>
-            <p class="text-xs text-slate-400">Giả lập tại mỗi ngày $t$, mô hình chỉ dùng các ngày trước đó ($t-1, t-2, \dots$) để dự đoán và đối chiếu với kết quả thực tế</p>
+            <p class="text-xs text-slate-400">Giả lập tại mỗi ngày t, mô hình chỉ dùng các ngày trước đó (t-1, t-2, …) để dự đoán và đối chiếu với kết quả thực tế. Dòng "Ngẫu nhiên" là tỷ lệ trúng nếu chọn bừa, để so sánh.</p>
           </div>
-          <button id="btnRunBacktest" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition">
-            Chạy Kiểm Thử Với Trọng Số Hiện Tại
-          </button>
+          <div class="flex flex-wrap items-center gap-2">
+            <label class="flex items-center gap-1.5 text-xs text-slate-400">Số kỳ kiểm thử
+              <select id="selectBacktestCount" class="bg-slate-950 border border-slate-700 rounded-lg px-1.5 py-1 text-slate-200">
+                <option value="15" selected>15 kỳ</option><option value="30">30 kỳ</option><option value="60">60 kỳ</option><option value="100">100 kỳ</option><option value="200">200 kỳ</option>
+              </select>
+            </label>
+            <button id="btnRunBacktest" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition">
+              Chạy Kiểm Thử Với Trọng Số Hiện Tại
+            </button>
+          </div>
         </div>
 
         <div id="backtestSummaryCards" class="grid grid-cols-1 sm:grid-cols-4 gap-4"></div>
@@ -764,6 +782,23 @@
 
     <!-- TAB 4: DATA & SOKETQUA PARSER -->
     <section id="tabPanelData" class="hidden space-y-6">
+      <div class="bg-slate-900 border border-emerald-500/40 rounded-2xl p-4 space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div><h2 class="text-sm font-bold text-white">Cập nhật kết quả tự động</h2><p class="text-xs text-slate-400">Bấm một nút để tải đủ 27 giải của các kỳ còn thiếu, không cần copy – dán. Cần có mạng.</p></div>
+          <span id="syncBadge" class="text-xs text-emerald-300"></span>
+        </div>
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <button type="button" id="btnSyncOnline" class="sync-btn px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition">↻ Tải kết quả mới nhất</button>
+          <label class="flex items-center gap-1.5 text-xs text-slate-300">Số kỳ tải về
+            <select id="selectSyncKeep" class="bg-slate-950 border border-slate-700 rounded-lg px-1.5 py-1 text-slate-200">
+              <option value="30">30 kỳ</option><option value="60">60 kỳ</option><option value="100" selected>100 kỳ</option><option value="200">200 kỳ</option><option value="365">365 kỳ</option>
+            </select>
+          </label>
+          <label class="flex items-center gap-1.5 text-xs text-slate-300 cursor-pointer"><input id="chkAutoSync" type="checkbox" checked class="rounded accent-emerald-500" /> Tự kiểm tra kỳ mới khi mở ứng dụng</label>
+        </div>
+        <p id="syncStatus" class="text-xs text-slate-400" aria-live="polite"></p>
+        <p class="text-[11px] text-slate-500">Nguồn: bộ dữ liệu XSMB mở trên GitHub (khiemdoan/vietnam-lottery-xsmb-analysis), cập nhật hằng ngày sau giờ quay. Nếu kỳ hôm nay chưa có, bấm lại sau ít phút hoặc dán / nhập tay ở bên dưới.</p>
+      </div>
       <div class="bg-slate-900 border border-slate-700 rounded-2xl p-4 space-y-3">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div><h2 class="text-sm font-bold text-white">Sao lưu dữ liệu trên iPhone</h2><p class="text-xs text-slate-400">Kết quả nhập được lưu trên thiết bị này. Xuất bản sao trước khi xóa dữ liệu Safari hoặc đổi máy.</p></div>
@@ -774,7 +809,7 @@
           <button type="button" id="pwaImport" class="pwa-data-action">Khôi phục bản sao</button>
           <input type="file" id="pwaImportFile" accept=".json,application/json" hidden />
         </div>
-        <p class="text-xs text-slate-500" id="pwaBackupNotice">Dữ liệu không tự cập nhật từ internet. Công cụ vẫn dùng được offline với dữ liệu có sẵn.</p>
+        <p class="text-xs text-slate-500" id="pwaBackupNotice">Bản sao gồm các kỳ đã tải về hoặc đã nhập trên thiết bị này. Công cụ vẫn dùng được offline với dữ liệu đã có.</p>
       </div>
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div class="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
@@ -813,7 +848,7 @@
                 Hoàn tác kỳ vừa nhập
               </button>
               <button id="btnResetDataset" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition">
-                Xóa dữ liệu đã nhập
+                Xóa dữ liệu đã nhập / đã tải
               </button>
             </div>
           </div>
@@ -892,30 +927,60 @@ print("Dàn Đề 20 số:", result["dan_20"])</pre>
     let chartTongDeInstance = null;
     let latestPredictionResult = null;
 
+    // Lựa chọn giao diện (tab đang xem, biên độ, số kỳ kiểm thử) – nhớ lại cho lần mở sau
+    const UI_KEY = 'xsmb_ui_prefs_v1';
+    function loadUiPrefs() {
+      try { const o = JSON.parse(localStorage.getItem(UI_KEY) || '{}'); return o && typeof o === 'object' ? o : {}; }
+      catch (e) { return {}; }
+    }
+    function saveUiPref(key, val) {
+      try { const o = loadUiPrefs(); o[key] = val; localStorage.setItem(UI_KEY, JSON.stringify(o)); } catch (e) { /* bỏ qua */ }
+    }
+
+    // Biên độ thống kê: số kỳ gần nhất dùng cho tab Dự đoán, Biểu đồ và Kiểm thử
+    function predWindowSize() {
+      const el = document.getElementById('selectPredWindow');
+      const v = el ? el.value : '30';
+      if (v === 'all') return historyData.length;
+      return Math.min(Number(v) || 30, historyData.length);
+    }
+
+    let toastTimer = null;
     function showToast(msg) {
       const container = document.getElementById('toastContainer');
       const text = document.getElementById('toastMessage');
       text.textContent = msg;
       container.classList.remove('hidden');
-      setTimeout(() => {
+      if (toastTimer) clearTimeout(toastTimer);      // thông báo mới không bị bộ hẹn giờ của thông báo cũ tắt sớm
+      toastTimer = setTimeout(() => {
         container.classList.add('hidden');
-      }, 2600);
+        toastTimer = null;
+      }, 3200);
     }
 
     function copyTextToClipboard(text, label) {
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      textarea.style.position = 'fixed';
-      textarea.style.opacity = '0';
-      document.body.appendChild(textarea);
-      textarea.select();
-      try {
-        document.execCommand('copy');
-        showToast('Đã sao chép ' + label + ' vào bộ nhớ tạm!');
-      } catch (e) {
-        showToast('Không thể sao chép tự động.');
+      const ok = () => showToast('Đã sao chép ' + label + ' vào bộ nhớ tạm!');
+      const fail = () => showToast('Không sao chép tự động được — hãy bôi đen rồi copy thủ công.');
+      const legacy = () => {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'fixed';
+        textarea.style.top = '0';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try { textarea.setSelectionRange(0, text.length); } catch (e) { /* bỏ qua */ }
+        let done = false;
+        try { done = document.execCommand('copy'); } catch (e) { done = false; }
+        document.body.removeChild(textarea);
+        if (done) ok(); else fail();
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
+        navigator.clipboard.writeText(String(text)).then(ok, legacy);
+      } else {
+        legacy();
       }
-      document.body.removeChild(textarea);
     }
 
     function computePredictionForSlice(sliceDesc, weights, penalizeRecent) {
@@ -1137,7 +1202,7 @@ print("Dàn Đề 20 số:", result["dan_20"])</pre>
             <span class="w-9 h-9 rounded-xl bg-amber-500 text-slate-950 font-extrabold text-base flex items-center justify-center font-mono">${item.num}</span>
             <div>
               <p class="font-bold text-white text-sm">Phân tích chi tiết số <span class="text-amber-400 font-mono">${item.num}</span> (Hạng #${rankIdx + 1}/100)</p>
-              <p class="text-slate-400 text-xs">Đầu ${item.dau} • Đuôi ${item.duoi} • Tổng ${item.tong} • Đã về ĐB ${item.appearedCount} lần trong ${historyData.length} kỳ</p>
+              <p class="text-slate-400 text-xs">Đầu ${item.dau} • Đuôi ${item.duoi} • Tổng ${item.tong} • Đã về ĐB ${item.appearedCount} lần trong ${(latestPredictionResult && latestPredictionResult.windowN) || historyData.length} kỳ</p>
             </div>
           </div>
           <span class="text-sm font-mono font-extrabold text-emerald-400">Tổng điểm: ${item.score}</span>
@@ -1173,10 +1238,12 @@ print("Dàn Đề 20 số:", result["dan_20"])</pre>
       document.getElementById('valWeightMarkov').textContent = Math.round(weights.wMarkov * 100) + '%';
       document.getElementById('valWeightBridge').textContent = Math.round(weights.wBridge * 100) + '%';
       document.getElementById('valWeightGap').textContent = Math.round(weights.wGap * 100) + '%';
-      document.getElementById('windowSizeBadge').textContent = 'Biên độ: ' + historyData.length + ' kỳ';
+      const usedSlice = historyData.slice(0, predWindowSize());
+      document.getElementById('windowSizeBadge').textContent = 'đang dùng ' + usedSlice.length + ' kỳ';
 
       const penalizeRecent = document.getElementById('chkPenalizeRecent').checked;
-      const res = computePredictionForSlice(historyData, weights, penalizeRecent);
+      const res = computePredictionForSlice(usedSlice, weights, penalizeRecent);
+      res.windowN = usedSlice.length;
       latestPredictionResult = res;
 
       // Top summary banner
@@ -1372,7 +1439,7 @@ print("Dàn Đề 20 số:", result["dan_20"])</pre>
           labels: labels.map(l => 'Tổng ' + l),
           datasets: [
             {
-              label: 'Số lần về (30 kỳ)',
+              label: 'Số lần về (' + (res.windowN || historyData.length) + ' kỳ)',
               data: res.tongFreq,
               backgroundColor: 'rgba(56, 189, 248, 0.8)',
               borderRadius: 6
@@ -1402,8 +1469,18 @@ print("Dàn Đề 20 số:", result["dan_20"])</pre>
     function runWalkForwardBacktest() {
       const weights = getCurrentWeights();
       const penalizeRecent = document.getElementById('chkPenalizeRecent').checked;
-      const testCount = Math.min(15, historyData.length - 10);
+      const W = predWindowSize();
+      const wantEl = document.getElementById('selectBacktestCount');
+      const want = wantEl ? (Number(wantEl.value) || 15) : 15;
+      const testCount = Math.max(0, Math.min(want, historyData.length - 10));
       const rows = [];
+      if (testCount === 0) {
+        document.getElementById('backtestSummaryCards').innerHTML = '<div class="sm:col-span-4 bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-xs text-amber-300">Cần ít nhất 11 kỳ kết quả để kiểm thử. Tải thêm kết quả ở tab "Sổ Kết Quả & Nhập Liệu".</div>';
+        document.getElementById('backtestTableBody').innerHTML = '';
+        return;
+      }
+      const pct = c => Math.round(c / testCount * 100);
+      const shortNote = testCount < want ? `<span class="text-[11px] text-amber-300 block mt-0.5">Dữ liệu mới đủ ${testCount} kỳ — tải thêm kỳ để kiểm thử dài hơn</span>` : '';
 
       let hitTouchCount = 0;
       let hitSumCount = 0;
@@ -1411,7 +1488,7 @@ print("Dàn Đề 20 số:", result["dan_20"])</pre>
 
       for (let idx = 0; idx < testCount; idx++) {
         const targetDraw = historyData[idx];
-        const priorSlice = historyData.slice(idx + 1);
+        const priorSlice = historyData.slice(idx + 1, idx + 1 + W);
         const sim = computePredictionForSlice(priorSlice, weights, penalizeRecent);
 
         const actualDe = targetDraw.de;
@@ -1450,18 +1527,22 @@ print("Dàn Đề 20 số:", result["dan_20"])</pre>
         <div class="bg-slate-950 border border-slate-800 rounded-xl p-3.5">
           <span class="text-xs text-slate-400 block">Số kỳ kiểm thử độc lập</span>
           <span class="text-xl font-extrabold text-white mt-1 block">${testCount} kỳ gần nhất</span>
+          <span class="text-[11px] text-slate-500 block mt-0.5">Mỗi kỳ dùng tối đa ${W} kỳ trước đó</span>${shortNote}
         </div>
         <div class="bg-slate-950 border border-slate-800 rounded-xl p-3.5">
           <span class="text-xs text-slate-400 block">Tỷ lệ trúng Chạm (Top 3 Đầu/Đuôi)</span>
-          <span class="text-xl font-extrabold text-emerald-400 mt-1 block">${hitTouchCount}/${testCount} (${Math.round(hitTouchCount / testCount * 100)}%)</span>
+          <span class="text-xl font-extrabold text-emerald-400 mt-1 block">${hitTouchCount}/${testCount} (${pct(hitTouchCount)}%)</span>
+          <span class="text-[11px] text-slate-500 block mt-0.5">Ngẫu nhiên: khoảng 51%</span>
         </div>
         <div class="bg-slate-950 border border-slate-800 rounded-xl p-3.5">
           <span class="text-xs text-slate-400 block">Tỷ lệ trúng Dàn 36 Số</span>
-          <span class="text-xl font-extrabold text-amber-400 mt-1 block">${hitDan36Count}/${testCount} (${Math.round(hitDan36Count / testCount * 100)}%)</span>
+          <span class="text-xl font-extrabold text-amber-400 mt-1 block">${hitDan36Count}/${testCount} (${pct(hitDan36Count)}%)</span>
+          <span class="text-[11px] text-slate-500 block mt-0.5">Ngẫu nhiên: 36%</span>
         </div>
         <div class="bg-slate-950 border border-slate-800 rounded-xl p-3.5">
           <span class="text-xs text-slate-400 block">Tỷ lệ trúng Top 3 Tổng Đề</span>
-          <span class="text-xl font-extrabold text-sky-400 mt-1 block">${hitSumCount}/${testCount} (${Math.round(hitSumCount / testCount * 100)}%)</span>
+          <span class="text-xl font-extrabold text-sky-400 mt-1 block">${hitSumCount}/${testCount} (${pct(hitSumCount)}%)</span>
+          <span class="text-[11px] text-slate-500 block mt-0.5">Ngẫu nhiên: 30%</span>
         </div>
       `;
 
@@ -1964,6 +2045,10 @@ print("Dàn Đề 20 số:", result["dan_20"])</pre>
           if (cur) {
             const { cnt, len } = SHAPE_MAP[cur];
             if (t.length === len && got[cur].length < cnt) got[cur].push(t);
+            else if (t.length > len && t.length % len === 0 && t.length / len <= cnt - got[cur].length) {
+              // Các số của 1 giải bị dính liền khi copy (VD Giải 3: 6 số × 5 chữ số thành 1 chuỗi 30 chữ số) → tự cắt ra
+              for (let p = 0; p < t.length; p += len) got[cur].push(t.slice(p, p + len));
+            }
           }
         }
       }
@@ -2010,25 +2095,46 @@ print("Dàn Đề 20 số:", result["dan_20"])</pre>
         if (dt.getUTCMonth() !== mo - 1) continue;
         marks.push({ date: fmtDMY(dt), start: m.index, end: m.index + m[0].length });
       }
-      const blocks = new Map();
-      let assumed = false;
-      if (!marks.length) {
-        blocks.set(fallbackDate, text);
-        assumed = true;
-      } else {
-        marks.forEach((mk, i) => {
-          const body = text.slice(mk.end, i + 1 < marks.length ? marks[i + 1].start : text.length);
+      const build = mks => {
+        const blocks = new Map();
+        mks.forEach((mk, i) => {
+          const body = text.slice(mk.end, i + 1 < mks.length ? mks[i + 1].start : text.length);
           blocks.set(mk.date, (blocks.get(mk.date) || '') + ' ' + body);
         });
+        const items = [];
+        blocks.forEach((body, date) => {
+          const r = interpretBlock(body);
+          if (r.kind === 'empty') return;
+          items.push(Object.assign({ date }, r));
+        });
+        items.sort((a, b) => dmyKey(a.date) - dmyKey(b.date));
+        return items;
+      };
+      const isGood = it => it.kind === 'full' || it.kind === 'partial';
+      if (marks.length) return { items: build(marks), assumedDate: null, guessedYear: false };
+
+      // Ngày không ghi năm (VD "Thứ 4, 11/11"): chỉ nhận dấu "/", tự lấy năm gần nhất không vượt quá hôm nay
+      const re2 = /(^|[^\d\/\-.])(\d{1,2})\/(\d{1,2})(?![\d\/\-]|\.\d)/g;
+      const now = new Date();
+      const limit = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) + 86400000;
+      const marks2 = [];
+      while ((m = re2.exec(text))) {
+        const d = Number(m[2]), mo = Number(m[3]);
+        if (mo < 1 || mo > 12 || d < 1 || d > 31) continue;
+        let dt = new Date(Date.UTC(now.getFullYear(), mo - 1, d));
+        if (dt.getTime() > limit) dt = new Date(Date.UTC(now.getFullYear() - 1, mo - 1, d));
+        if (dt.getUTCMonth() !== mo - 1) continue;
+        marks2.push({ date: fmtDMY(dt), start: m.index + m[1].length, end: m.index + m[0].length });
       }
-      const items = [];
-      blocks.forEach((body, date) => {
-        const r = interpretBlock(body);
-        if (r.kind === 'empty') return;
-        items.push(Object.assign({ date }, r));
-      });
-      items.sort((a, b) => dmyKey(a.date) - dmyKey(b.date));
-      return { items, assumedDate: assumed ? fallbackDate : null };
+      if (marks2.length) {
+        const items2 = build(marks2);
+        if (items2.some(isGood)) return { items: items2, assumedDate: null, guessedYear: true };
+      }
+
+      // Không có ngày nào trong đoạn dán → gán cho ngày ở ô "Nhập tay" (mặc định là kỳ kế tiếp)
+      const r = interpretBlock(text);
+      const items = r.kind === 'empty' ? [] : [Object.assign({ date: fallbackDate }, r)];
+      return { items, assumedDate: fallbackDate, guessedYear: false };
     }
 
     // ---------------------------------------------------------------- ghi dữ liệu
@@ -2077,7 +2183,7 @@ print("Dàn Đề 20 số:", result["dan_20"])</pre>
       if (!raw) { showToast('Vui lòng dán nội dung từ soketqua.vn vào ô trống.'); return; }
       const manualDate = normDate($('inputManualDate').value, lastDateStr());
       const fallback = manualDate || nextDateStr();
-      const { items, assumedDate } = parseBulk(raw, fallback);
+      const { items, assumedDate, guessedYear } = parseBulk(raw, fallback);
       if (!items.length) {
         showReport(reportHtml([], '<div class="text-rose-300">Không nhận ra kết quả nào. Cần có ngày (dd/mm/yyyy) và các giải ĐB, G1 … G7 trong đoạn văn bản.</div>'));
         showToast('Không tìm thấy kết quả xổ số trong đoạn văn bản.');
@@ -2086,11 +2192,14 @@ print("Dàn Đề 20 số:", result["dan_20"])</pre>
       const good = items.filter(i => i.kind === 'full' || i.kind === 'partial');
       let saved = true;
       if (good.length) saved = addRecords(good.map(i => Object.assign({ date: i.date }, i.rec)));
-      const note = assumedDate ? `<div class="text-slate-300">Đoạn dán không có ngày, đã gán cho ${assumedDate}.</div>` : '';
+      const note = assumedDate
+        ? `<div class="text-amber-300">Đoạn dán không có ngày, đã gán cho ${assumedDate}. Nếu sai ngày, bấm "Hoàn tác kỳ vừa nhập" rồi dán lại kèm dòng ngày dd/mm/yyyy.</div>`
+        : (guessedYear ? `<div class="text-slate-300">Ngày trong đoạn dán không ghi năm, đã hiểu là ${items.map(i => i.date).join(', ')}.</div>` : '');
       showReport(reportHtml(items, note, saved));
       if (good.length) {
         showToast(`Đã cập nhật ${good.length} kỳ • ${bridgeCountText()}`);
         $('rawSoketquaInput').value = '';
+        syncManualDate(true);
       } else {
         showToast('Có số liệu nhưng chưa đủ ĐB, G1, G7 để lưu — xem báo cáo bên dưới.');
       }
@@ -2152,6 +2261,9 @@ print("Dàn Đề 20 số:", result["dan_20"])</pre>
     }
 
     function handleReset() {
+      const nUser = Object.keys(userDays).length;
+      if (!nUser) { showToast('Chưa có kỳ nào do bạn nhập hoặc tải về để xóa.'); return; }
+      if (!confirm('Xóa ' + nUser + ' kỳ đã nhập / đã tải về và quay về dữ liệu gốc? Thao tác này không hoàn tác được.')) return;
       userDays = {};
       try { localStorage.removeItem(STORE_KEY); } catch (e) { /* bỏ qua */ }
       rebuildData();
@@ -2159,6 +2271,229 @@ print("Dàn Đề 20 số:", result["dan_20"])</pre>
       syncManualDate(true);
       showReport('');
       showToast('Đã xóa các kỳ bạn nhập, quay về dữ liệu gốc đến ' + lastDateStr() + '.');
+    }
+
+
+    // ======================================================================
+    // v3.1: TỰ TẢI KẾT QUẢ ĐỦ 27 GIẢI TỪ BỘ DỮ LIỆU MỞ (GitHub, cập nhật hằng ngày)
+    // ======================================================================
+    const SYNC_URL = 'https://raw.githubusercontent.com/khiemdoan/vietnam-lottery-xsmb-analysis/main/data/xsmb.csv';
+    const SYNC_KEY = 'xsmb_sync_meta_v1';
+    const SYNC_COLS = {
+      DB: ['special'], G1: ['prize1'], G2: ['prize2_1', 'prize2_2'],
+      G3: ['prize3_1', 'prize3_2', 'prize3_3', 'prize3_4', 'prize3_5', 'prize3_6'],
+      G4: ['prize4_1', 'prize4_2', 'prize4_3', 'prize4_4'],
+      G5: ['prize5_1', 'prize5_2', 'prize5_3', 'prize5_4', 'prize5_5', 'prize5_6'],
+      G6: ['prize6_1', 'prize6_2', 'prize6_3'], G7: ['prize7_1', 'prize7_2', 'prize7_3', 'prize7_4']
+    };
+    const SYNC_MAX_ROWS = 1500;       // chỉ đọc tối đa 1500 kỳ gần nhất của file nguồn
+    let syncMeta = { keep: 100, auto: true, lastTry: 0, lastOk: 0, noDraw: [] };
+    let NO_DRAW = new Set();          // các ngày nguồn dữ liệu xác nhận không quay (nghỉ Tết)
+    let syncBusy = false;
+
+    function loadSyncMeta() {
+      try {
+        const o = JSON.parse(localStorage.getItem(SYNC_KEY) || '{}') || {};
+        if ([30, 60, 100, 200, 365].includes(Number(o.keep))) syncMeta.keep = Number(o.keep);
+        if (typeof o.auto === 'boolean') syncMeta.auto = o.auto;
+        syncMeta.lastTry = Number(o.lastTry) || 0;
+        syncMeta.lastOk = Number(o.lastOk) || 0;
+        if (Array.isArray(o.noDraw)) syncMeta.noDraw = o.noDraw.filter(x => parseDMY(x)).slice(-200);
+      } catch (e) { /* dùng mặc định */ }
+      NO_DRAW = new Set(syncMeta.noDraw);
+    }
+    function saveSyncMeta() {
+      try { localStorage.setItem(SYNC_KEY, JSON.stringify(syncMeta)); } catch (e) { /* bỏ qua */ }
+    }
+
+    // Kỳ quay mới nhất lẽ ra đã có kết quả, tính theo giờ Việt Nam (quay xong khoảng 18:35)
+    function expectedLatestDrawDate() {
+      const vn = new Date(Date.now() + 7 * 3600000);        // đọc bằng getUTC* để ra giờ VN
+      const done = vn.getUTCHours() > 18 || (vn.getUTCHours() === 18 && vn.getUTCMinutes() >= 40);
+      let t = Date.UTC(vn.getUTCFullYear(), vn.getUTCMonth(), vn.getUTCDate()) - (done ? 0 : 86400000);
+      while (NO_DRAW.has(fmtDMY(new Date(t)))) t -= 86400000;
+      return fmtDMY(new Date(t));
+    }
+
+    // Số kỳ còn thiếu tính đến kỳ mới nhất lẽ ra đã có (bỏ qua ngày nghỉ Tết đã biết)
+    function missingDrawCount() {
+      const last = lastDateStr();
+      if (!last) return 0;
+      const a = dmyKey(last), b = dmyKey(expectedLatestDrawDate());
+      let c = 0;
+      for (let k = a + 1; k <= b && c < 999; k++) if (!NO_DRAW.has(fmtDMY(new Date(k * 86400000)))) c++;
+      return c;
+    }
+
+    // Đọc file CSV của nguồn → các kỳ đủ 27 giải (thêm số 0 ở đầu vì nguồn lưu dạng số), cũ → mới
+    function parseSyncCsv(text) {
+      const lines = String(text).replace(/^﻿/, '').split(/\r?\n/).filter(l => l.trim());
+      if (lines.length < 2) throw new Error('file dữ liệu của nguồn đang rỗng');
+      const ix = {};
+      lines[0].split(',').forEach((h, i) => { ix[h.trim()] = i; });
+      const need = ['date'];
+      Object.keys(SYNC_COLS).forEach(pz => SYNC_COLS[pz].forEach(c => need.push(c)));
+      const lack = need.filter(c => ix[c] === undefined);
+      if (lack.length) throw new Error('nguồn dữ liệu đã đổi định dạng (thiếu cột ' + lack[0] + ')');
+      const recs = [];
+      lines.slice(1).slice(-SYNC_MAX_ROWS).forEach(line => {
+        const v = line.split(',');
+        const m = /^(\d{4})-(\d{2})-(\d{2})/.exec((v[ix.date] || '').trim());
+        if (!m) return;
+        const rec = { date: m[3] + '/' + m[2] + '/' + m[1] };
+        PRIZE_SHAPE.forEach(([pz, cnt, len]) => {
+          rec[pz] = SYNC_COLS[pz].map(c => {
+            const x = (v[ix[c]] || '').trim();
+            return /^\d+$/.test(x) ? x.padStart(len, '0') : x;
+          });
+        });
+        if (parseDMY(rec.date) && isFullDraw(rec)) recs.push(rec);
+      });
+      if (!recs.length) throw new Error('không đọc được kỳ nào từ nguồn');
+      recs.sort((a, b) => dmyKey(a.date) - dmyKey(b.date));
+      return recs;
+    }
+
+    // Ghép các kỳ của nguồn vào sổ. Trả về thống kê để báo cho người dùng.
+    function applySyncRecords(recs) {
+      // 1) Ngày nguồn không có kỳ quay (nghỉ Tết) → để không báo nhầm là "thiếu kỳ"
+      const nd = [];
+      for (let i = 1; i < recs.length; i++) {
+        const a = dmyKey(recs[i - 1].date), b = dmyKey(recs[i].date);
+        if (b - a > 1 && b - a <= 10) for (let k = a + 1; k < b; k++) nd.push(fmtDMY(new Date(k * 86400000)));
+      }
+      syncMeta.noDraw = nd.slice(-200);
+      NO_DRAW = new Set(syncMeta.noDraw);
+
+      // 2) Chọn các kỳ cần lấy: N kỳ gần nhất, nới rộng để nối liền với kỳ mới nhất đang có trong sổ
+      let chosen = recs.slice(-syncMeta.keep);
+      const last = lastDateStr();
+      if (last && chosen.length && dmyKey(last) + 1 < dmyKey(chosen[0].date) && dmyKey(last) >= dmyKey(recs[0].date)) {
+        chosen = recs.filter(r => dmyKey(r.date) > dmyKey(last));
+      }
+
+      // 3) Ghi vào sổ: kỳ mới, kỳ được bổ sung đủ 27 giải, kỳ khác với nguồn
+      const cur = new Map(ALL_DAYS.map(r => [r.date, r]));
+      const sameRec = (x, y) => PRIZE_ORDER.every(p => Array.isArray(x[p]) && Array.isArray(y[p]) && x[p].join(',') === y[p].join(','));
+      const added = [], fixed = [];
+      let upgraded = 0;
+      chosen.forEach(r => {
+        const old = cur.get(r.date);
+        if (old && isFullDraw(old) && sameRec(old, r)) return;
+        if (!old) added.push(r.date);
+        else if (old.DB[0] !== r.DB[0] || old.G1[0] !== r.G1[0] || old.G7.join(',') !== r.G7.join(',') || isFullDraw(old)) fixed.push(r.date);
+        else upgraded++;
+        userDays[r.date] = cloneRec(r);
+      });
+      let saved = true;
+      if (added.length || fixed.length || upgraded) {
+        saved = saveUserDays();
+        rebuildData();
+        refreshAll();
+        syncManualDate(true);
+      }
+      return { added, fixed, upgraded, saved, latest: recs[recs.length - 1].date };
+    }
+
+    function setSyncStatus(msg, tone) {
+      const el = $('syncStatus');
+      if (!el) return;
+      el.textContent = msg;
+      el.className = 'text-xs ' + ({ ok: 'text-emerald-300', warn: 'text-amber-300', bad: 'text-rose-300' }[tone] || 'text-slate-400');
+    }
+
+    function renderSyncInfo() {
+      const badge = $('syncBadge');
+      if (badge) {
+        if (syncMeta.lastOk) {
+          const d = new Date(syncMeta.lastOk), p = n => String(n).padStart(2, '0');
+          badge.textContent = `Lần tải gần nhất: ${p(d.getHours())}:${p(d.getMinutes())} ngày ${p(d.getDate())}/${p(d.getMonth() + 1)}`;
+        } else badge.textContent = 'Chưa tải lần nào';
+      }
+      const note = $('latestStaleNote');
+      if (note) {
+        const miss = missingDrawCount();
+        if (miss > 0) {
+          note.textContent = `Sổ đang thiếu ${miss} kỳ (đến ${expectedLatestDrawDate()}).`;
+          note.classList.remove('hidden');
+        } else note.classList.add('hidden');
+      }
+      document.querySelectorAll('.sync-btn').forEach(b => {
+        b.disabled = syncBusy;
+        const idle = b.id === 'btnQuickSync' ? '↻ Cập nhật kết quả' : '↻ Tải kết quả mới nhất';
+        b.textContent = syncBusy ? 'Đang tải…' : idle;
+      });
+    }
+
+    async function syncOnline(opts) {
+      opts = opts || {};
+      if (syncBusy) return;
+      if (navigator.onLine === false) {
+        if (!opts.silent) {
+          setSyncStatus('Đang không có mạng nên chưa tải được. Vẫn có thể dán hoặc nhập tay ở bên dưới.', 'warn');
+          showToast('Không có mạng, chưa tải được kết quả.');
+        }
+        return;
+      }
+      syncBusy = true;
+      syncMeta.lastTry = Date.now();
+      saveSyncMeta();
+      renderSyncInfo();
+      if (!opts.silent) setSyncStatus('Đang tải kết quả từ nguồn…');
+      let ctrl = null, timer = null;
+      try {
+        if (typeof AbortController !== 'undefined') { ctrl = new AbortController(); timer = setTimeout(() => ctrl.abort(), 30000); }
+        const resp = await fetch(SYNC_URL, { cache: 'no-cache', signal: ctrl ? ctrl.signal : undefined });
+        if (!resp.ok) throw new Error('máy chủ nguồn trả về lỗi ' + resp.status);
+        const out = applySyncRecords(parseSyncCsv(await resp.text()));
+        syncMeta.lastOk = Date.now();
+        saveSyncMeta();
+        const parts = [];
+        if (out.added.length) parts.push(`thêm ${out.added.length} kỳ mới`);
+        if (out.upgraded) parts.push(`bổ sung đủ 27 giải cho ${out.upgraded} kỳ`);
+        if (out.fixed.length) parts.push(`sửa ${out.fixed.length} kỳ khác với nguồn (${out.fixed.slice(0, 5).join(', ')}${out.fixed.length > 5 ? '…' : ''})`);
+        const lastNow = lastDateStr();
+        const exp = expectedLatestDrawDate();
+        const pending = dmyKey(out.latest) < dmyKey(exp) ? ` Nguồn chưa có kỳ ${exp}, hãy bấm lại sau ít phút hoặc dán tay.` : '';
+        if (parts.length) {
+          const msg = `Đã ${parts.join(', ')}. Kỳ mới nhất trong sổ: ${dowOfDMY(lastNow)}, ${lastNow}.`;
+          setSyncStatus(msg + pending + (out.saved ? '' : ' Trình duyệt không cho lưu (chế độ ẩn danh hoặc đầy bộ nhớ) nên dữ liệu chỉ giữ đến khi đóng trang.'), out.saved ? 'ok' : 'warn');
+          showToast(opts.silent ? `Đã tự tải ${out.added.length + out.upgraded + out.fixed.length} kỳ • mới nhất ${lastNow}` : msg);
+        } else {
+          setSyncStatus(`Sổ đã có đủ kết quả đến ${lastNow}.` + pending, pending ? 'warn' : 'ok');
+          if (!opts.silent) showToast(pending ? `Nguồn chưa có kỳ ${exp}.` : `Sổ đã mới nhất (đến ${lastNow}).`);
+        }
+      } catch (e) {
+        let why = (e && e.message) || 'lỗi không rõ';
+        if (e && e.name === 'AbortError') why = 'quá thời gian chờ (mạng chậm)';
+        else if (e && e.name === 'TypeError') why = 'không kết nối được tới nguồn dữ liệu';
+        setSyncStatus('Chưa tải được kết quả: ' + why + '. Thử lại sau, hoặc dán / nhập tay ở bên dưới.', 'bad');
+        if (!opts.silent) showToast('Chưa tải được kết quả: ' + why + '.');
+      } finally {
+        if (timer) clearTimeout(timer);
+        syncBusy = false;
+        renderSyncInfo();
+      }
+    }
+
+    // Tự kiểm tra khi mở / quay lại ứng dụng: chỉ khi đang thiếu kỳ và lần thử trước cách đây trên 20 phút
+    function maybeAutoSync() {
+      if (!syncMeta.auto || syncBusy || navigator.onLine === false) return;
+      if (missingDrawCount() <= 0) return;
+      if (Date.now() - (syncMeta.lastTry || 0) < 20 * 60000) return;
+      syncOnline({ silent: true });
+    }
+
+    function initSync() {
+      loadSyncMeta();
+      $('selectSyncKeep').value = String(syncMeta.keep);
+      $('chkAutoSync').checked = syncMeta.auto;
+      $('selectSyncKeep').addEventListener('change', () => { syncMeta.keep = Number($('selectSyncKeep').value) || 100; saveSyncMeta(); });
+      $('chkAutoSync').addEventListener('change', () => { syncMeta.auto = $('chkAutoSync').checked; saveSyncMeta(); });
+      $('btnSyncOnline').addEventListener('click', () => syncOnline({}));
+      $('btnQuickSync').addEventListener('click', () => syncOnline({}));
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) { renderSyncInfo(); maybeAutoSync(); } });
+      window.addEventListener('online', maybeAutoSync);
     }
 
 
@@ -2494,6 +2829,9 @@ print("Dàn Đề 20 số:", result["dan_20"])</pre>
     // Lý do không có cầu: chuỗi ngày bị ngắt hay đơn giản là không tìm được cặp nào
     function gapNote(runArr, allArr) {
       if (allArr.length > runArr.length && runArr.length) {
+        if (NO_DRAW.has(addDaysDMY(runArr[0].date, -1))) {
+          return `Chuỗi ngày liên tiếp bắt đầu từ ${runArr[0].date} (${runArr.length} kỳ) vì ngay trước đó là kỳ nghỉ Tết, không quay số.`;
+        }
         return `Chuỗi ngày liên tiếp đang bị ngắt: chỉ dùng được ${runArr.length} kỳ gần nhất (${runArr[0].date} → ${runArr[runArr.length - 1].date}) vì thiếu kỳ ${addDaysDMY(runArr[0].date, -1)}. Nhập bổ sung kỳ còn thiếu để nối lại chuỗi.`;
       }
       return '';
@@ -2558,7 +2896,8 @@ print("Dàn Đề 20 số:", result["dan_20"])</pre>
       } else {
         const next = addDaysDMY(run[n - 1].date, 1);
         html = `<b>Dữ liệu dò cầu:</b> ${n} kỳ đủ 27 giải liên tiếp (${run[0].date} → ${run[n - 1].date}). Đang dò cầu cho kỳ <b class="text-amber-300">${dowOfDMY(next)}, ${next}</b>.`;
-        if (fullDraws.length > n) html += ` <span class="text-amber-300">⚠ Chuỗi bị ngắt: thiếu kỳ ${addDaysDMY(run[0].date, -1)} (hoặc kỳ này chưa đủ 27 giải), nên ${fullDraws.length - n} kỳ cũ hơn không được dùng. Nhập bổ sung kỳ còn thiếu để nối lại chuỗi.</span>`;
+        if (fullDraws.length > n && NO_DRAW.has(addDaysDMY(run[0].date, -1))) html += ` <span class="text-slate-400">Chuỗi liên tiếp bắt đầu từ ${run[0].date} vì ngay trước đó là kỳ nghỉ Tết (không quay số).</span>`;
+        else if (fullDraws.length > n) html += ` <span class="text-amber-300">⚠ Chuỗi bị ngắt: thiếu kỳ ${addDaysDMY(run[0].date, -1)} (hoặc kỳ này chưa đủ 27 giải), nên ${fullDraws.length - n} kỳ cũ hơn không được dùng. Nhập bổ sung kỳ còn thiếu để nối lại chuỗi.</span>`;
         if (lastAny && lastFull && dmyKey(lastAny.date) > dmyKey(lastFull.date)) {
           html += ` <span class="text-amber-300">⚠ Kỳ ${lastAny.date} mới có ĐB/G1/G7 nên cầu vị trí và cộng tổng vẫn tính đến ${lastFull.date}. Nhập đủ 27 giải của kỳ ${lastAny.date} để các cầu này cập nhật.</span>`;
         }
@@ -3439,6 +3778,7 @@ print("Dàn Đề 20 số:", result["dan_20"])</pre>
 
     function switchTab(tabName) {
       currentTab = tabName;
+      saveUiPref('tab', tabName);
       const panels = {
         predict: $('tabPanelPredict'), multisum: $('tabPanelMultiSum'), visual: $('tabPanelVisual'), tail34: $('tabPanelTail34'), xien: $('tabPanelXien'),
         stats: $('tabPanelStats'), backtest: $('tabPanelBacktest'), data: $('tabPanelData'), code: $('tabPanelCode')
@@ -3449,6 +3789,12 @@ print("Dàn Đề 20 số:", result["dan_20"])</pre>
           ? 'tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-amber-500 text-slate-950 transition'
           : 'tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-slate-300 hover:text-white transition';
       });
+      // Thanh tab vuốt ngang trên điện thoại: đưa tab đang chọn vào giữa tầm nhìn
+      const actBtn = document.querySelector('.tab-btn[data-tab="' + tabName + '"]');
+      const navEl = actBtn ? actBtn.parentElement : null;
+      if (navEl && navEl.scrollWidth > navEl.clientWidth + 1) {
+        navEl.scrollLeft += actBtn.getBoundingClientRect().left - navEl.getBoundingClientRect().left - (navEl.clientWidth - actBtn.offsetWidth) / 2;
+      }
       renderTab(tabName);
     }
 
@@ -3460,6 +3806,7 @@ print("Dàn Đề 20 số:", result["dan_20"])</pre>
       renderHistoryTable();
       if (currentTab !== 'multisum') renderTab('multisum');   // luôn giữ tab cộng tổng đồng bộ dù đang ẩn
       renderTab(currentTab);
+      renderSyncInfo();
     }
 
 
@@ -3508,6 +3855,19 @@ print("Dàn Đề 20 số:", result["dan_20"])</pre>
         if (!latestPredictionResult) return;
         copyTextToClipboard(latestPredictionResult.ranked.slice(0, 10).map(x => x.num).join(', '), 'Top 10 Bạch Thủ Đề');
       });
+      // Biên độ thống kê + số kỳ kiểm thử (nhớ lựa chọn cho lần sau)
+      const uiPrefs = loadUiPrefs();
+      const selWin = document.getElementById('selectPredWindow');
+      const selBt = document.getElementById('selectBacktestCount');
+      if (uiPrefs.win && [...selWin.options].some(o => o.value === String(uiPrefs.win))) selWin.value = String(uiPrefs.win);
+      if (uiPrefs.bt && [...selBt.options].some(o => o.value === String(uiPrefs.bt))) selBt.value = String(uiPrefs.bt);
+      selWin.addEventListener('change', () => {
+        saveUiPref('win', selWin.value);
+        updateAllViews();
+        if (currentTab === 'backtest') runWalkForwardBacktest();
+      });
+      selBt.addEventListener('change', () => { saveUiPref('bt', selBt.value); runWalkForwardBacktest(); });
+
       document.getElementById('btnRunBacktest').addEventListener('click', () => {
         runWalkForwardBacktest();
         showToast('Đã cập nhật kết quả kiểm thử lịch sử!');
@@ -3551,6 +3911,7 @@ print("Dàn Đề 20 số:", result["dan_20"])</pre>
 
       // Khởi tạo dữ liệu → dò cầu → vẽ
       userDays = loadUserDays();
+      initSync();
       rebuildData();
       computeCaches();
       initCustomFormulaBuilder();
@@ -3558,7 +3919,13 @@ print("Dàn Đề 20 số:", result["dan_20"])</pre>
       refreshAll();
       computeAndRenderTail34(false);
       initXienModule();
-      switchTab('xien');
+      // Mở lại đúng tab đang xem lần trước; lần đầu vào tab Dự đoán
+      const TAB_NAMES = ['predict', 'multisum', 'visual', 'tail34', 'xien', 'stats', 'backtest', 'data', 'code'];
+      switchTab(TAB_NAMES.includes(uiPrefs.tab) ? uiPrefs.tab : 'predict');
+      setSyncStatus(missingDrawCount() > 0
+        ? `Sổ đang có kết quả đến ${lastDateStr()}, còn thiếu ${missingDrawCount()} kỳ. Bấm "Tải kết quả mới nhất" để bổ sung.`
+        : `Sổ đã có kết quả đến ${lastDateStr()}.`, missingDrawCount() > 0 ? 'warn' : 'ok');
+      setTimeout(maybeAutoSync, 600);
     });
   </script>
   <script>
